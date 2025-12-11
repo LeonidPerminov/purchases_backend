@@ -1,12 +1,11 @@
+from .tasks import send_order_emails
 from django.contrib.auth.models import User
-from django.conf import settings
-from django.core.mail import send_mail
-
 from rest_framework import viewsets, permissions, generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.generics import ListAPIView
+from rest_framework.throttling import ScopedRateThrottle
 
 from .models import (
     Shop,
@@ -49,7 +48,7 @@ class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all()   # ← ДОБАВИТЬ ЭТО
 
     def get_queryset(self):
-        return Order.objects.filter(user=self.request.user).order_by('-dt')
+        return Order.objects.filter(user=self.request.user).order_by('-created_at')
 
     def perform_create(self, serializer):
         # user проставляем автоматически
@@ -71,7 +70,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         # Получаем или создаём заказ в статусе 'basket'
         basket, _ = Order.objects.get_or_create(
             user=user,
-            state='basket',
+            status='basket',
         )
 
         # ---------- GET: показать корзину ----------
@@ -179,13 +178,14 @@ class OrderViewSet(viewsets.ModelViewSet):
 
         # Ищем корзину с товарами
         try:
-            basket = Order.objects.get(user=user, state='basket')
+            basket = Order.objects.get(user=user, status='basket')
         except Order.DoesNotExist:
             return Response(
                 {'error': 'Корзина пуста.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+            # проверяем, что в корзине есть позиции
         if not basket.ordered_items.exists():
             return Response(
                 {'error': 'Нельзя оформить заказ с пустой корзиной.'},
@@ -207,13 +207,13 @@ class OrderViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Обновляем заказ: ставим контакт и статус
+            # Обновляем заказ: ставим контакт и статус
         basket.contact = contact
-        basket.state = 'new'  # или 'confirmed' — как у тебя в ТЗ
+        basket.status = 'new'  # или 'confirmed' — как у тебя в ТЗ
         basket.save()
 
-        # Пробуем отправить e-mail (если настроен EMAIL_BACKEND)
-        self._send_order_emails(user, basket)
+        # 👉 ВАЖНО: вместо синхронной отправки писем — Celery-задача
+        send_order_emails.delay(order_id=basket.id, user_id=user.id)
 
         serializer = OrderSerializer(basket)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -265,6 +265,10 @@ class RegisterView(generics.CreateAPIView):
     Регистрация нового пользователя.
     Доступна всем (AllowAny).
     """
+
+
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'register'
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
     permission_classes = [AllowAny]

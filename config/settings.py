@@ -138,11 +138,13 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_CLASSES': [
         'rest_framework.throttling.AnonRateThrottle',
         'rest_framework.throttling.UserRateThrottle',
+        'rest_framework.throttling.ScopedRateThrottle',  # ← добавили
     ],
 
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '100/hour',   # неавторизованный пользователь
-        'user': '1000/day',   # авторизованный пользователь
+        'anon': '100/hour',     # неавторизованный пользователь
+        'user': '1000/day',     # авторизованный пользователь
+        'register': '5/hour',   # лимит для регистрации
     },
 }
 
