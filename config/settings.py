@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'shop',
+    'drf_spectacular',
+    'drf_spectacular_sidecar',
 ]
 
 MIDDLEWARE = [
@@ -131,5 +133,40 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.AllowAny',
     ),
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/hour',   # неавторизованный пользователь
+        'user': '1000/day',   # авторизованный пользователь
+    },
 }
 
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Purchases API',
+    'DESCRIPTION': 'Backend сервиса автоматизации закупок. Здесь описание проекта, что делает API.',
+    'VERSION': '1.0.0',
+
+    # Можно не трогать, но полезные флаги:
+    'SERVE_INCLUDE_SCHEMA': False,  # сам /schema/ не будет отображаться в Swagger как отдельный эндпоинт
+    'COMPONENT_SPLIT_REQUEST': True,
+    'COMPONENT_NO_READ_ONLY_REQUIRED': True,
+}
+
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+
+# куда сохранять результаты задач (можно тоже в Redis, можно отключить)
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/1'
+
+# чтобы не было проблем с JSON/Unicode
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+
+# часовой пояс и enable_utc
+CELERY_TIMEZONE = TIME_ZONE  # если TIME_ZONE уже задан в settings
+CELERY_ENABLE_UTC = False
