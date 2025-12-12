@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Django
+*.log
+staticfiles/
+media/
+db.sqlite3
+
+# Environment
+.env
+.env.*
+*.env
+
+# Virtualenv
+.venv/
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# Byte-compiled / optimized / DLL files
+*.pyc
+
+# Migrations (опционально, если не хочешь хранить)
+# */migrations/*
+
+# Caches
+*.cache
+.cache/
+
+# OS-specific
+.DS_Store
+Thumbs.db
