@@ -47,6 +47,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'baton',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -59,6 +60,7 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'drf_spectacular_sidecar',
     'social_django',
+    'imagekit',
 ]
 
 MIDDLEWARE = [
@@ -190,4 +192,9 @@ CELERY_RESULT_SERIALIZER = 'json'
 # часовой пояс и enable_utc
 CELERY_TIMEZONE = TIME_ZONE  # если TIME_ZONE уже задан в settings
 CELERY_ENABLE_UTC = False
+
+BATON = {
+    'SITE_HEADER': 'Purchases Backend',
+}
+
 

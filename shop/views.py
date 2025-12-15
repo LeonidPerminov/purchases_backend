@@ -19,7 +19,8 @@ from .models import (
 from .serializers import (
     ShopSerializer,
     CategorySerializer,
-    ProductSerializer,
+    ProductReadSerializer,
+    ProductWriteSerializer,
     OrderSerializer,
     OrderItemSerializer,
     ContactSerializer,
@@ -37,10 +38,24 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = CategorySerializer
     permission_classes = [AllowAny]
 
-class ProductViewSet(viewsets.ReadOnlyModelViewSet):
+from rest_framework.permissions import AllowAny, IsAdminUser
+
+class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
-    serializer_class = ProductSerializer
-    permission_classes = [AllowAny]
+
+    def get_permissions(self):
+        # чтение — всем
+        if self.action in ("list", "retrieve"):
+            return [AllowAny()]
+        # запись/изменение — только админ
+        return [IsAdminUser()]
+
+    def get_serializer_class(self):
+        # GET
+        if self.action in ("list", "retrieve"):
+            return ProductReadSerializer
+        # POST/PUT/PATCH
+        return ProductWriteSerializer
 
 class OrderViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]

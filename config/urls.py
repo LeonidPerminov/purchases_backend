@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.urls import path, include
+from baton.autodiscover import admin
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from shop.views import RegisterView, ProductInfoListView
 from drf_spectacular.views import (
@@ -10,7 +11,7 @@ from drf_spectacular.views import (
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-
+    path('baton/', include('baton.urls')),
     # Регистрация
     path('api/v1/auth/register/', RegisterView.as_view(), name='register'),
 

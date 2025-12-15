@@ -1,5 +1,7 @@
 from django.conf import settings
 from django.db import models
+from imagekit.models import ImageSpecField
+from imagekit.processors import ResizeToFill
 
 
 
@@ -40,6 +42,34 @@ class Product(models.Model):
         related_name="products",
         on_delete=models.CASCADE,
         verbose_name="Категория",
+    )
+
+    image = models.ImageField(
+        upload_to='products/originals/',
+        blank=True,
+        null=True,
+        verbose_name="Изображение"
+    )
+
+    image_small = ImageSpecField(
+        source='image',
+        processors=[ResizeToFill(100, 100)],
+        format='JPEG',
+        options={'quality': 80}
+    )
+
+    image_medium = ImageSpecField(
+        source='image',
+        processors=[ResizeToFill(300, 300)],
+        format='JPEG',
+        options={'quality': 85}
+    )
+
+    image_large = ImageSpecField(
+        source='image',
+        processors=[ResizeToFill(800, 800)],
+        format='JPEG',
+        options={'quality': 90}
     )
 
     class Meta:
@@ -202,7 +232,7 @@ class Order(models.Model):
 class OrderItem(models.Model):
     order = models.ForeignKey(
         Order,
-        related_name="items",
+        related_name="ordered_items",
         on_delete=models.CASCADE,
         verbose_name="Заказ",
     )

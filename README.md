@@ -1,4 +1,5 @@
 Purchases Backend
+![coverage](https://img.shields.io/badge/coverage-78%25-brightgreen)
 
 Дипломный проект (Netology).
 API на Django REST Framework для управления покупками и корзиной.
@@ -198,6 +199,17 @@ SimpleJWT
 SQLite
 
 YAML (PyYAML)
+
+Asynchronous thumbnails generation
+
+Product images are stored in Product.image
+
+Thumbnails (100x100, 300x300, 800x800) are generated via django-imagekit
+
+Thumbnail generation is triggered asynchronously via Celery task shop.tasks.generate_product_thumbnails
+
+Celery worker (Windows):
+python -m celery -A config.celery worker -l info -P solo
 
 Автор
 
