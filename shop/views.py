@@ -1,32 +1,26 @@
-from .tasks import send_order_emails
 from django.contrib.auth.models import User
-from rest_framework import viewsets, permissions, generics, status
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework.generics import ListAPIView
-from rest_framework.throttling import ScopedRateThrottle
 
-from .models import (
-    Shop,
-    Category,
-    Product,
-    Order,
-    Contact,
-    ProductInfo,
-    OrderItem,
-)
+from rest_framework import viewsets, permissions, generics, status
+from rest_framework.decorators import action
+from rest_framework.generics import ListAPIView
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
+from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
+from rest_framework.views import APIView
+
+from .tasks import send_order_emails
+from .models import Shop, Category, Product, Order, Contact, ProductInfo, OrderItem
 from .serializers import (
     ShopSerializer,
     CategorySerializer,
     ProductReadSerializer,
     ProductWriteSerializer,
     OrderSerializer,
-    OrderItemSerializer,
     ContactSerializer,
     RegisterSerializer,
     ProductInfoSerializer,
 )
+
 
 class ShopViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Shop.objects.all()
@@ -38,7 +32,6 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = CategorySerializer
     permission_classes = [AllowAny]
 
-from rest_framework.permissions import AllowAny, IsAdminUser
 
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
@@ -200,7 +193,7 @@ class OrderViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-            # проверяем, что в корзине есть позиции
+        # проверяем, что в корзине есть позиции
         if not basket.ordered_items.exists():
             return Response(
                 {'error': 'Нельзя оформить заказ с пустой корзиной.'},
@@ -222,7 +215,7 @@ class OrderViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-            # Обновляем заказ: ставим контакт и статус
+        # Обновляем заказ: ставим контакт и статус
         basket.contact = contact
         basket.status = 'new'  # или 'confirmed' — как у тебя в ТЗ
         basket.save()
@@ -232,38 +225,6 @@ class OrderViewSet(viewsets.ModelViewSet):
 
         serializer = OrderSerializer(basket)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def _send_order_emails(self, user, order):
-        """
-        Вспомогательный метод: отправка email клиенту и менеджеру.
-        Работает только если настроены EMAIL_* в settings.
-        """
-        # Письмо клиенту
-        if getattr(settings, 'EMAIL_HOST', None) and user.email:
-            try:
-                send_mail(
-                    subject=f'Ваш заказ #{order.id} принят',
-                    message=f'Спасибо за заказ #{order.id} на нашем сервисе.',
-                    from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None),
-                    recipient_list=[user.email],
-                    fail_silently=True,
-                )
-            except Exception:
-                pass
-
-        # Письмо менеджеру (если указано)
-        manager_email = getattr(settings, 'SHOP_MANAGER_EMAIL', None)
-        if getattr(settings, 'EMAIL_HOST', None) and manager_email:
-            try:
-                send_mail(
-                    subject=f'Новый заказ #{order.id}',
-                    message=f'Поступил новый заказ #{order.id} от пользователя {user.username}.',
-                    from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None),
-                    recipient_list=[manager_email],
-                    fail_silently=True,
-                )
-            except Exception:
-                pass
 
 class ContactViewSet(viewsets.ModelViewSet):
     serializer_class = ContactSerializer
@@ -374,3 +335,11 @@ class ProductInfoListView(ListAPIView):
             ).distinct()
 
         return qs
+
+class SentryDebugAPIView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request, *args, **kwargs):
+        # Специально вызываем необработанное исключение
+        raise RuntimeError("Sentry test: intentional exception")
+        # return Response({"ok": True})

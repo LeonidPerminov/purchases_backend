@@ -6,8 +6,10 @@ from .views import (
     CategoryViewSet,
     ProductViewSet,
     OrderViewSet,
-    ContactViewSet,      # ← ЭТО НУЖНО ДОБАВИТЬ!
+    ContactViewSet,
 )
+
+from .views import SentryDebugAPIView
 
 router = DefaultRouter()
 router.register(r'shops', ShopViewSet)
@@ -18,4 +20,5 @@ router.register(r'contacts', ContactViewSet, basename='contacts')
 
 urlpatterns = [
     path('', include(router.urls)),
+    path("debug/sentry/", SentryDebugAPIView.as_view(), name="debug-sentry"),
 ]

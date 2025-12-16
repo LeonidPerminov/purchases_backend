@@ -211,6 +211,9 @@ Thumbnail generation is triggered asynchronously via Celery task shop.tasks.gene
 Celery worker (Windows):
 python -m celery -A config.celery worker -l info -P solo
 
+Для включения error tracking укажите SENTRY_DSN в .env.
+Если переменная не задана — Sentry отключён.
+
 Автор
 
 Леонид Перминов

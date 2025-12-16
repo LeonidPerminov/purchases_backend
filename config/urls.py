@@ -1,6 +1,5 @@
 from django.contrib import admin
 from django.urls import path, include
-from baton.autodiscover import admin
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from shop.views import RegisterView, ProductInfoListView
 from drf_spectacular.views import (
@@ -8,6 +7,7 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
     SpectacularRedocView,
 )
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -47,6 +47,7 @@ urlpatterns = [
         name='redoc',
     ),
     path('oauth/', include('social_django.urls', namespace='social')),
+
 ]
 
 
