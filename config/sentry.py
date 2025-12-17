@@ -1,14 +1,9 @@
 import os
 
-import sentry_sdk
-from sentry_sdk.integrations.django import DjangoIntegration
-from sentry_sdk.integrations.celery import CeleryIntegration
-
 
 def init_sentry() -> None:
     dsn = os.getenv("SENTRY_DSN")
     if not dsn:
-        # Если DSN не задан — ничего не инициализируем.
         return
 
     traces_sample_rate_str = os.getenv("SENTRY_TRACES_SAMPLE_RATE", "0.0")
@@ -18,6 +13,10 @@ def init_sentry() -> None:
         traces_sample_rate = 0.0
 
     send_pii = os.getenv("SENTRY_SEND_PII", "0") == "1"
+
+    import sentry_sdk
+    from sentry_sdk.integrations.django import DjangoIntegration
+    from sentry_sdk.integrations.celery import CeleryIntegration
 
     sentry_sdk.init(
         dsn=dsn,

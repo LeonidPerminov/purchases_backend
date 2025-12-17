@@ -214,6 +214,25 @@ python -m celery -A config.celery worker -l info -P solo
 Для включения error tracking укажите SENTRY_DSN в .env.
 Если переменная не задана — Sentry отключён.
 
+## ORM query caching (Redis + django-cacheops)
+
+В проекте включено кэширование ORM-запросов чтения через Redis с помощью `django-cacheops`.
+Кэш включается флагом `CACHEOPS_ENABLED=1`.
+
+### Env
+- `REDIS_URL` — адрес Redis
+- `CACHEOPS_REDIS_DB` — номер Redis DB для кэша (по умолчанию 2)
+- `CACHEOPS_ENABLED` — 1/0
+
+### Benchmark endpoint
+`GET /api/bench/cache/`
+
+Первый запрос прогревает кэш, повторные запросы должны быть быстрее.
+
+### Results (local)
+- Before cacheops: 1st = X ms, 2nd = Y ms, 3rd = Z ms
+- After cacheops:  1st = X ms, 2nd = Y ms, 3rd = Z ms
+
 Автор
 
 Леонид Перминов

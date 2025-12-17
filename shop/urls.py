@@ -10,6 +10,7 @@ from .views import (
 )
 
 from .views import SentryDebugAPIView
+from .views_bench import CacheBenchmarkView
 
 router = DefaultRouter()
 router.register(r'shops', ShopViewSet)
@@ -21,4 +22,5 @@ router.register(r'contacts', ContactViewSet, basename='contacts')
 urlpatterns = [
     path('', include(router.urls)),
     path("debug/sentry/", SentryDebugAPIView.as_view(), name="debug-sentry"),
+    path("bench/cache/", CacheBenchmarkView.as_view(), name="bench-cache"),
 ]

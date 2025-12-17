@@ -202,4 +202,45 @@ from config.sentry import init_sentry
 
 init_sentry()
 
+# --- Cacheops (ORM query caching via Redis) ---
+
+CACHEOPS_ENABLED = os.getenv("CACHEOPS_ENABLED", "0") == "1"
+REDIS_URL = os.getenv("REDIS_URL", "redis://127.0.0.1:6379/0")
+CACHEOPS_REDIS_DB = os.getenv("CACHEOPS_REDIS_DB", "2")
+
+def _with_redis_db(redis_url: str, db: str) -> str:
+    """
+    Replace trailing redis DB in redis_url (e.g. /0) with /<db>.
+    If trailing part isn't a digit, append /<db>.
+    """
+    url = redis_url.rstrip("/")
+    last = url.split("/")[-1]
+    if last.isdigit():
+        base = "/".join(url.split("/")[:-1])
+        return f"{base}/{db}"
+    return f"{url}/{db}"
+
+if CACHEOPS_ENABLED:
+    INSTALLED_APPS += ["cacheops"]
+
+    CACHEOPS_REDIS = _with_redis_db(REDIS_URL, CACHEOPS_REDIS_DB)
+
+    CACHEOPS_DEFAULTS = {
+        "timeout": 60 * 5,  # 5 minutes
+    }
+
+    # ВАЖНО: замени "shop.*" на имя твоего приложения с бизнес-моделями
+    # Например: "api.*", "backend.*", "orders.*" и т.п.
+    CACHEOPS = {
+        "auth.*": {"ops": ()},
+        "admin.*": {"ops": ()},
+        "contenttypes.*": {"ops": ()},
+        "sessions.*": {"ops": ()},
+
+        "shop.*": {"ops": ("fetch", "get"), "timeout": 60 * 10},
+    }
+
+    # Включай при отладке, чтобы видеть hit/miss в логах
+    CACHEOPS_DEBUG = os.getenv("CACHEOPS_DEBUG", "0") == "1"
+
 
